@@ -93,3 +93,5 @@ fintech-wallet/
         ├── context/       # AuthContext (holds JWT, current user)
         └── api/client.js  # axios instance, attaches JWT to requests
 ```
+
+# SecureWallet
