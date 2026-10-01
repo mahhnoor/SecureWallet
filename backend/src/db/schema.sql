@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
     -- SEC: only the bcrypt hash is stored, never plaintext or reversible encryption
     password_hash   TEXT         NOT NULL,
     full_name       VARCHAR(150) NOT NULL,
+    --TOP MFA 
+    mfa_enabled     BOOLEAN NOT NULL DEFAULT FALSE,
+    mfa_secret      TEXT,
     -- SEC: account lockout support (brute-force mitigation, defense in depth
     -- alongside the login rate limiter)
     failed_login_attempts SMALLINT NOT NULL DEFAULT 0,
