@@ -1,0 +1,75 @@
+# Run the whole application (database + API + web app) with one command:
+#
+#     docker compose up --build
+#
+# Then open http://localhost:5173
+# Every value below has a safe development default, so no .env file is needed.
+# To override a value, copy .env.example to .env and edit it.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wallet_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-wallet_dev_password}
+      POSTGRES_DB: fintech_wallet
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Tables are created automatically the first time the database starts.
+      - ./backend/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      # -h 127.0.0.1 forces a TCP check, so it only passes once the real server
+      # (not the temporary start-up server) is accepting connections.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U wallet_app -d fintech_wallet"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    # Uncomment to inspect the database from your own machine (psql / pgAdmin):
+    # ports:
+    #   - "5433:5432"
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: wallet_app
+      DB_PASSWORD: ${DB_PASSWORD:-wallet_dev_password}
+      DB_NAME: fintech_wallet
+      # DEVELOPMENT-ONLY default (the server requires 32+ characters).
+      # Use a long random value of your own for anything real.
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-0123456789abcdef-not-for-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://127.0.0.1:5173}
+      # Creates the demo users ali and sara on start-up (skipped if they exist).
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # The browser calls the API directly, so this is the address as seen
+        # from your browser. It is baked in when the image is built.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "5173:80"
+
+volumes:
+  pgdata:
