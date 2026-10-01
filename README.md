@@ -14,7 +14,7 @@ You only need [Docker Desktop](https://www.docker.com/products/docker-desktop/) 
 No Node.js or PostgreSQL installation is required.
 
 ```bash
-git clone <https://github.com/mahhnoor/SecureWallet.git>
+git clone https://github.com/mahhnoor/SecureWallet.git
 cd fintech-wallet
 docker compose up --build
 ```
