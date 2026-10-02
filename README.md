@@ -35,7 +35,7 @@ Log in as `ali` and send money to `sara` (or the other way round). You can also 
 ### Trying multi-factor authentication (MFA)
 1. Log in as `ali` or `sara` (or your own account) and open the Dashboard.
 2. Click **“2FA not enabled · Set up”**.
-3. Scan the QR code with an authenticator app (Google Authenticator, Microsoft Authenticator, Authy).
+3. Scan the QR code with an authenticator app (Google Authenticator).
 4. Enter the 6-digit code to switch MFA on.
 5. Log out and log in again — after the password you will be asked for a fresh 6-digit code.
 
@@ -65,6 +65,11 @@ and edit it. Notes:
 - **You changed the schema or the database password and nothing happens:** the database is only initialised on its first start. Run `docker compose down -v` and start again.
 
 ---
+## Architecture
+
+![Architecture and security control placement](docs/architecture.png)
+
+*The React frontend calls the Express API, which applies security headers, CORS, rate limiting, validation, JWT/MFA authentication and parameterized queries before reaching PostgreSQL. Green boxes mark the security controls.*
 
 ## Security controls implemented (see `SEC:` comments in the code)
 | Area | Control |
